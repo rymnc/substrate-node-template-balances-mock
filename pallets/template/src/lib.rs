@@ -46,6 +46,7 @@ pub mod pallet {
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [something, who]
 		SomethingStored(u32, T::AccountId),
+		SomethingClaimed(T::Hasher::Hash, T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
@@ -55,6 +56,7 @@ pub mod pallet {
 		NoneValue,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
+		ClaimExists,
 	}
 
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -77,6 +79,20 @@ pub mod pallet {
 			// Emit an event.
 			Self::deposit_event(Event::SomethingStored(something, who));
 			// Return a successful DispatchResultWithPostInfo
+			Ok(())
+		}
+
+		#[pallet:weight(10_000 + T::DbWeight::get().reads_writes(1,1))]
+		pub fn create_claim(origin: OriginFor<T>, hash: T::Hasher::Hash) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			let v = <Something<T>>:get(hash);
+			if v {
+				Err(Error::<T>::ClaimExists.into())
+			}
+			<Something<T>>::put(hash);
+			Self::deposit_event(Event::SomethingClaimed(hash, who));
+
 			Ok(())
 		}
 
