@@ -45,6 +45,7 @@ impl system::Config for Test {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ConstU16<42>;
+  type ReserveAmount = u64;
 	type OnSetCode = ();
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }

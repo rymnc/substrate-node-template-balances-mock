@@ -2,19 +2,19 @@ use crate::{mock::*, Error};
 use frame_support::{assert_noop, assert_ok};
 
 #[test]
-fn it_works_for_default_value() {
+fn can_create_claim() {
 	new_test_ext().execute_with(|| {
 		// Dispatch a signed extrinsic.
-		assert_ok!(TemplateModule::do_something(Origin::signed(1), 42));
-		// Read pallet storage and assert an expected result.
-		assert_eq!(TemplateModule::something(), Some(42));
+		assert_ok!(TemplateModule::create_claim(Origin::signed(1), vec![1,2,3,4]));
 	});
 }
 
 #[test]
-fn correct_error_for_none_value() {
-	new_test_ext().execute_with(|| {
-		// Ensure the expected error is thrown when no value is present.
-		assert_noop!(TemplateModule::cause_error(Origin::signed(1)), Error::<Test>::NoneValue);
-	});
+fn should_error_if_claim_rewrite_attempted() {
+  new_test_ext().execute_with(|| {
+		assert_ok!(TemplateModule::create_claim(Origin::signed(1), vec![1,2,3,4]));
+
+    assert_noop!(TemplateModule::create_claim(Origin::signed(1), vec![1,2,3,4]));
+  })
 }
+

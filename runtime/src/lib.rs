@@ -23,6 +23,8 @@ use sp_std::prelude::*;
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
+pub use frame_support::traits::EqualPrivilegeOnly;
+
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
@@ -54,7 +56,8 @@ pub type Signature = MultiSignature;
 
 /// Some way of identifying an account on the chain. We intentionally make it equivalent
 /// to the public key of our transaction signing scheme.
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
+type SigAsVerify = <Signature as Verify>::Signer;
+pub type AccountId  = <SigAsVerify as IdentifyAccount>::AccountId;
 
 /// Balance of an account.
 pub type Balance = u128;
@@ -89,6 +92,25 @@ pub mod opaque {
 	}
 }
 
+parameter_types! {
+	pub MaximumSchedulerWeight: Weight = 10_000_000;
+	pub const MaxScheduledPerBlock: u32 = 50;
+ }
+
+ impl pallet_scheduler::Config for Runtime {
+	type Event = Event;
+	type Origin = Origin;
+	type PalletsOrigin = OriginCaller;
+	type Call = Call;
+	type MaximumWeight = MaximumSchedulerWeight;
+	type ScheduleOrigin = frame_system::EnsureRoot<AccountId>;
+	type MaxScheduledPerBlock = MaxScheduledPerBlock;
+	type WeightInfo = ();
+	type OriginPrivilegeCmp = EqualPrivilegeOnly;
+	type PreimageProvider = ();
+	type NoPreimagePostponement = ();
+ }
+
 // To learn more about runtime versioning and what each of the following value means:
 //   https://docs.substrate.io/v3/runtime/upgrades#runtime-versioning
 #[sp_version::runtime_version]
@@ -101,7 +123,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	//   `spec_version`, and `authoring_version` are the same between Wasm and native.
 	// This value is set to 100 to notify Polkadot-JS App (https://polkadot.js.org/apps) to use
 	//   the compatible custom types.
-	spec_version: 100,
+	spec_version: 102,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -142,6 +164,7 @@ parameter_types! {
 	pub BlockLength: frame_system::limits::BlockLength = frame_system::limits::BlockLength
 		::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
 	pub const SS58Prefix: u8 = 42;
+	pub const ReserveAmount: Balance = 10_000;
 }
 
 // Configure FRAME pallets to include in runtime.
@@ -265,6 +288,8 @@ impl pallet_sudo::Config for Runtime {
 /// Configure the pallet-template in pallets/template.
 impl pallet_template::Config for Runtime {
 	type Event = Event;
+	type Token = Balances;
+	type ReserveAmount = ReserveAmount;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
@@ -284,6 +309,7 @@ construct_runtime!(
 		Sudo: pallet_sudo,
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template,
+		Scheduler: pallet_scheduler,
 	}
 );
 

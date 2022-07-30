@@ -34,7 +34,13 @@ std = [
 	"frame-support/std",
 	"frame-system/std",
 	"frame-benchmarking/std",
+	"sp-std/std",
 ]
 
 runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
 try-runtime = ["frame-support/try-runtime"]
+
+[dependencies.sp-std]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+branch = 'polkadot-v0.9.26'  # Must *match* the rest of your Substrate deps!
