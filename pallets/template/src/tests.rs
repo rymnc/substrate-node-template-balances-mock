@@ -12,9 +12,10 @@ fn can_create_claim() {
 #[test]
 fn should_error_if_claim_rewrite_attempted() {
   new_test_ext().execute_with(|| {
-		assert_ok!(TemplateModule::create_claim(Origin::signed(1), vec![1,2,3,4]));
+    let proof = vec![1,2,3,4];
+		assert_ok!(TemplateModule::create_claim(Origin::signed(1), proof.clone()));
 
-    assert_noop!(TemplateModule::create_claim(Origin::signed(1), vec![1,2,3,4]));
+    assert_noop!(TemplateModule::create_claim(Origin::signed(1), proof.clone()), Error::<Test>::ProofAlreadyClaimed);
   })
 }
 
